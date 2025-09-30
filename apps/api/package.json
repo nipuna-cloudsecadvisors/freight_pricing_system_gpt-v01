@@ -17,10 +17,6 @@
     "prisma:seed": "prisma db seed",
     "worker": "ts-node-dev --respawn --transpile-only src/worker.ts"
   },
-  "prisma": {
-    "schema": "../../prisma/schema.prisma",
-    "seed": "ts-node --esm ../../prisma/seed.ts"
-  },
   "dependencies": {
     "@bull-board/api": "^5.12.4",
     "@bull-board/express": "^5.12.4",
