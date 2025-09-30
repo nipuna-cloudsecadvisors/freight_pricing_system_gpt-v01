@@ -122,16 +122,16 @@ sudo apt install -y nodejs
 
 ### 5.3 Install workspace dependencies and generate Prisma client
 ```bash
-pnpm install --frozen-lockfile
-pnpm dlx prisma generate
+pnpm install --no-frozen-lockfile
+pnpm prisma:generate
 ```
 
 ### 5.4 Run database migrations and seed data
 ```bash
-pnpm prisma migrate deploy
-pnpm prisma db seed
+pnpm prisma:migrate
+pnpm prisma:seed
 ```
-> These commands connect to the database defined in `.env`. If you are using the Dockerised Postgres from `docker-compose.yml`, ensure the stack is running (next step) before seeding. For managed Postgres services, ensure the connection details are reachable from the VM.
+> These workspace scripts proxy to the API service's bundled Prisma CLI and connect to the database defined in `.env`. If you are using the Dockerised Postgres from `docker-compose.yml`, ensure the stack is running (next step) before seeding. For managed Postgres services, ensure the connection details are reachable from the VM.
 
 ---
 

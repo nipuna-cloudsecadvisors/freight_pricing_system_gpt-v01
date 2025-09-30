@@ -16,13 +16,14 @@ model User {
   role      UserRole
   password  String
   status    UserStatus @default(ACTIVE)
-  sbu       Sbu?      @relation(fields: [sbuId], references: [id])
+  sbu       Sbu?      @relation("SbuMembers", fields: [sbuId], references: [id])
   sbuId     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   pricingAssignments PricingTeamAssignment[]
   itineraries        Itinerary[] @relation("ItineraryOwner")
   approvals          Itinerary[] @relation("ItineraryApprover")
+  headedSbus         Sbu[] @relation("SbuHead")
   salesActivities    SalesActivity[]
   leads              Lead[] @relation("LeadOwner")
   notifications      Notification[]
@@ -46,9 +47,9 @@ enum UserStatus {
 model Sbu {
   id          String @id @default(cuid())
   name        String
-  headUser    User?  @relation(fields: [headUserId], references: [id])
+  headUser    User?  @relation("SbuHead", fields: [headUserId], references: [id])
   headUserId  String?
-  users       User[]
+  users       User[] @relation("SbuMembers")
 }
 
 model Customer {
