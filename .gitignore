@@ -1,0 +1,15 @@
+node_modules
+.pnpm-store
+.env
+.env.local
+dist
+build
+coverage
+.tmp
+.prisma
+.DS_Store
+pnpm-lock.yaml
+apps/web/node_modules
+apps/api/node_modules
+apps/web/dist
+apps/api/dist
