@@ -43,8 +43,8 @@ Frontend specific variables reside in `apps/web/.env.example` (copied to `.env` 
 ## Getting started (local dev)
 
 ```bash
-pnpm install
-pnpm dlx prisma generate
+pnpm install --no-frozen-lockfile
+pnpm prisma:generate
 pnpm dev:api      # start Express API on http://localhost:4000
 pnpm dev:web      # start React app on http://localhost:5173
 ```
@@ -55,7 +55,7 @@ To initialise the database with seed data:
 pnpm prisma:seed
 ```
 
-> The Prisma CLI is executed from the root using the shared schema (see `package.json` scripts).
+> The Prisma CLI is executed from the root using the shared schema (see `package.json` scripts such as `pnpm prisma:migrate`).
 
 ## Docker Compose
 
@@ -87,3 +87,10 @@ Once running:
 - Admin panel for users, roles, customer approvals, and system configuration.
 
 Refer to `apps/api/README.md` and `apps/web/README.md` for module-specific notes.
+
+## Production deployment
+
+For a step-by-step deployment walkthrough tailored to Ubuntu 24.04 virtual machines—including installing Docker, preparing the
+environment, running migrations, and operating the stack—see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+
+If merge conflicts appear while syncing with `main`, use the step-by-step guide in [`docs/CONFLICT_RESOLUTION.md`](docs/CONFLICT_RESOLUTION.md).
