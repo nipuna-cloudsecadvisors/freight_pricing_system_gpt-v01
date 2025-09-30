@@ -1,0 +1,417 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../apps/api/node_modules/@prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  phone     String?
+  role      UserRole
+  password  String
+  status    UserStatus @default(ACTIVE)
+  sbu       Sbu?      @relation("SbuMembers", fields: [sbuId], references: [id])
+  sbuId     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  pricingAssignments PricingTeamAssignment[]
+  itineraries        Itinerary[] @relation("ItineraryOwner")
+  approvals          Itinerary[] @relation("ItineraryApprover")
+  headedSbus         Sbu[] @relation("SbuHead")
+  salesActivities    SalesActivity[]
+  leads              Lead[] @relation("LeadOwner")
+  notifications      Notification[]
+  auditEvents        AuditEvent[] @relation("AuditActor")
+}
+
+enum UserRole {
+  ADMIN
+  SBU_HEAD
+  SALES
+  CSE
+  PRICING
+  MGMT
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Sbu {
+  id          String @id @default(cuid())
+  name        String
+  headUser    User?  @relation("SbuHead", fields: [headUserId], references: [id])
+  headUserId  String?
+  users       User[] @relation("SbuMembers")
+}
+
+model Customer {
+  id              String             @id @default(cuid())
+  name            String
+  approvalStatus  CustomerApprovalStatus @default(PENDING)
+  createdBy       User               @relation("CustomerCreator", fields: [createdById], references: [id])
+  createdById     String
+  approvedBy      User?              @relation("CustomerApprover", fields: [approvedById], references: [id])
+  approvedById    String?
+  approvedAt      DateTime?
+  contacts        Json?
+  salesActivities SalesActivity[]
+  itineraries     ItineraryItem[]
+  rateRequests    RateRequest[]
+  bookingRequests BookingRequest[]
+}
+
+enum CustomerApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model TradeLane {
+  id        String @id @default(cuid())
+  region    String
+  name      String
+  code      String   @unique
+  rates     PredefinedRate[]
+  assignees PricingTeamAssignment[]
+}
+
+model Port {
+  id        String @id @default(cuid())
+  unlocode  String @unique
+  name      String
+  country   String
+  originRates  PredefinedRate[] @relation("OriginRates")
+  destRates    PredefinedRate[] @relation("DestRates")
+  originRequests RateRequest[] @relation("OriginRequests")
+  destRequests   RateRequest[] @relation("DestRequests")
+}
+
+model ShippingLine {
+  id    String @id @default(cuid())
+  name  String
+  code  String @unique
+  predefinedRates PredefinedRate[]
+  rateRequestResponses RateRequestResponse[]
+  lineQuotes     LineQuote[]
+}
+
+model EquipmentType {
+  id        String @id @default(cuid())
+  name      String
+  isReefer  Boolean @default(false)
+  isFlatRackOpenTop Boolean @default(false)
+  predefinedRates PredefinedRate[]
+  rateRequests    RateRequest[]
+  rateRequestResponses RateRequestResponse[]
+  lineQuotes      LineQuote[]
+}
+
+model PricingTeamAssignment {
+  id           String   @id @default(cuid())
+  tradeLane    TradeLane @relation(fields: [tradeLaneId], references: [id])
+  tradeLaneId  String
+  user         User      @relation(fields: [userId], references: [id])
+  userId       String
+}
+
+enum RateStatus {
+  ACTIVE
+  EXPIRED
+}
+
+model PredefinedRate {
+  id           String   @id @default(cuid())
+  tradeLane    TradeLane @relation(fields: [tradeLaneId], references: [id])
+  tradeLaneId  String
+  pol          Port      @relation("OriginRates", fields: [polId], references: [id])
+  polId        String
+  pod          Port      @relation("DestRates", fields: [podId], references: [id])
+  podId        String
+  service      String
+  equipment    EquipmentType @relation(fields: [equipTypeId], references: [id])
+  equipTypeId  String
+  isLcl        Boolean @default(false)
+  validFrom    DateTime
+  validTo      DateTime
+  status       RateStatus @default(ACTIVE)
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  shippingLine ShippingLine? @relation(fields: [shippingLineId], references: [id])
+  shippingLineId String?
+}
+
+enum RateRequestMode {
+  SEA
+  AIR
+}
+
+enum RateRequestType {
+  FCL
+  LCL
+}
+
+enum DoorOption {
+  DOOR
+  CY
+}
+
+enum DetentionFreeTime {
+  D7
+  D14
+  D21
+  OTHER
+}
+
+enum RateRequestStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  REJECTED
+}
+
+model RateRequest {
+  id                String   @id @default(cuid())
+  refNo             String   @unique
+  mode              RateRequestMode
+  type              RateRequestType
+  pol               Port      @relation("OriginRequests", fields: [polId], references: [id])
+  polId             String
+  pod               Port      @relation("DestRequests", fields: [podId], references: [id])
+  podId             String
+  doorOrCy          DoorOption
+  usZip             String?
+  preferredLine     ShippingLine? @relation(fields: [preferredLineId], references: [id])
+  preferredLineId   String?
+  equipment         EquipmentType @relation(fields: [equipTypeId], references: [id])
+  equipTypeId       String
+  reeferTemp        String?
+  palletCount       Int?
+  palletDims        String?
+  hsCode            String?
+  weightTons        Float?
+  incoterm          String?
+  marketRate        Float?
+  specialInstructions String?
+  cargoReadyDate    DateTime?
+  vesselRequired    Boolean @default(false)
+  detentionFreeTime DetentionFreeTime
+  salesperson       User     @relation(fields: [salespersonId], references: [id])
+  salespersonId     String
+  customer          Customer @relation(fields: [customerId], references: [id])
+  customerId        String
+  status            RateRequestStatus @default(PENDING)
+  bookingRequests   BookingRequest[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  responses         RateRequestResponse[]
+  lineQuotes        LineQuote[]
+  vesselDetails     Json?
+  processedPercent  Float    @default(0)
+}
+
+model RateRequestResponse {
+  id                     String   @id @default(cuid())
+  rateRequest            RateRequest @relation(fields: [rateRequestId], references: [id])
+  rateRequestId          String
+  lineNo                 Int
+  requestedLine          ShippingLine? @relation(fields: [requestedLineId], references: [id])
+  requestedLineId        String?
+  requestedEquipment     EquipmentType? @relation(fields: [requestedEquipTypeId], references: [id])
+  requestedEquipTypeId   String?
+  vesselName             String?
+  eta                    DateTime?
+  etd                    DateTime?
+  fclCutoff              DateTime?
+  docCutoff              DateTime?
+  validTo                DateTime
+  chargesJson            Json
+}
+
+model LineQuote {
+  id             String   @id @default(cuid())
+  rateRequest    RateRequest @relation(fields: [rateRequestId], references: [id])
+  rateRequestId  String
+  line           ShippingLine @relation(fields: [lineId], references: [id])
+  lineId         String
+  termsJson      Json
+  validTo        DateTime
+  selected       Boolean @default(false)
+  equipment      EquipmentType? @relation(fields: [equipmentId], references: [id])
+  equipmentId    String?
+}
+
+enum BookingRequestStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+model BookingRequest {
+  id            String   @id @default(cuid())
+  raisedBy      User     @relation(fields: [raisedByUserId], references: [id])
+  raisedByUserId String
+  customer      Customer @relation(fields: [customerId], references: [id])
+  customerId    String
+  rateSource    RateSource
+  linkId        String
+  status        BookingRequestStatus @default(PENDING)
+  cancelReason  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  roDocuments   RoDocument[]
+  jobs          Job[]
+}
+
+enum RateSource {
+  PREDEFINED
+  REQUEST
+}
+
+model RoDocument {
+  id              String   @id @default(cuid())
+  bookingRequest  BookingRequest @relation(fields: [bookingRequestId], references: [id])
+  bookingRequestId String
+  number          String
+  fileUrl         String
+  receivedAt      DateTime
+}
+
+model Job {
+  id             String   @id @default(cuid())
+  bookingRequest BookingRequest @relation(fields: [bookingRequestId], references: [id])
+  bookingRequestId String
+  erpJobNo       String
+  openedBy       User     @relation(fields: [openedByUserId], references: [id])
+  openedByUserId String
+  openedAt       DateTime @default(now())
+  completions    JobCompletion[]
+}
+
+model JobCompletion {
+  id         String   @id @default(cuid())
+  job        Job      @relation(fields: [jobId], references: [id])
+  jobId      String
+  cseUser    User     @relation(fields: [cseUserId], references: [id])
+  cseUserId  String
+  details    Json
+  completedAt DateTime @default(now())
+}
+
+enum ItineraryType {
+  SP
+  CSE
+}
+
+enum ItineraryStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+model Itinerary {
+  id          String   @id @default(cuid())
+  owner       User     @relation("ItineraryOwner", fields: [ownerUserId], references: [id])
+  ownerUserId String
+  type        ItineraryType
+  weekStart   DateTime
+  status      ItineraryStatus @default(DRAFT)
+  approver    User?    @relation("ItineraryApprover", fields: [approverId], references: [id])
+  approverId  String?
+  approveNote String?
+  submittedAt DateTime?
+  decidedAt   DateTime?
+  items       ItineraryItem[]
+}
+
+model ItineraryItem {
+  id           String   @id @default(cuid())
+  itinerary    Itinerary @relation(fields: [itineraryId], references: [id])
+  itineraryId  String
+  date         DateTime
+  customer     Customer? @relation(fields: [customerId], references: [id])
+  customerId   String?
+  lead         Lead?     @relation(fields: [leadId], references: [id])
+  leadId       String?
+  purpose      String
+  plannedTime  String?
+  location     String?
+  notes        String?
+}
+
+enum ActivityType {
+  VISIT
+  CALL
+  MEETING
+}
+
+model SalesActivity {
+  id            String   @id @default(cuid())
+  user          User     @relation(fields: [userId], references: [id])
+  userId        String
+  customer      Customer? @relation(fields: [customerId], references: [id])
+  customerId    String?
+  lead          Lead?     @relation(fields: [leadId], references: [id])
+  leadId        String?
+  type          ActivityType
+  date          DateTime
+  notes         String?
+  outcome       String?
+  nextActionDate DateTime?
+}
+
+model Lead {
+  id          String   @id @default(cuid())
+  companyName String
+  contact     String?
+  stage       String
+  owner       User     @relation("LeadOwner", fields: [ownerId], references: [id])
+  ownerId     String
+  source      String?
+  activities  SalesActivity[]
+  itineraryItems ItineraryItem[]
+}
+
+enum NotificationChannel {
+  SYSTEM
+  EMAIL
+  SMS
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  channel   NotificationChannel
+  subject   String
+  body      String
+  status    NotificationStatus @default(PENDING)
+  meta      Json?
+  createdAt DateTime @default(now())
+}
+
+model AuditEvent {
+  id        String   @id @default(cuid())
+  actor     User     @relation("AuditActor", fields: [actorId], references: [id])
+  actorId   String
+  entity    String
+  entityId  String
+  action    String
+  payload   Json?
+  ts        DateTime @default(now())
+}
