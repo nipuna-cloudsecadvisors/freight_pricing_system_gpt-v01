@@ -92,3 +92,5 @@ Refer to `apps/api/README.md` and `apps/web/README.md` for module-specific notes
 
 For a step-by-step deployment walkthrough tailored to Ubuntu 24.04 virtual machines—including installing Docker, preparing the
 environment, running migrations, and operating the stack—see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+
+If merge conflicts appear while syncing with `main`, use the step-by-step guide in [`docs/CONFLICT_RESOLUTION.md`](docs/CONFLICT_RESOLUTION.md).
