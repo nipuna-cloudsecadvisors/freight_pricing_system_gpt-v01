@@ -87,8 +87,3 @@ Once running:
 - Admin panel for users, roles, customer approvals, and system configuration.
 
 Refer to `apps/api/README.md` and `apps/web/README.md` for module-specific notes.
-
-## Production deployment
-
-For a step-by-step deployment walkthrough tailored to Ubuntu 24.04 virtual machines—including installing Docker, preparing the
-environment, running migrations, and operating the stack—see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
